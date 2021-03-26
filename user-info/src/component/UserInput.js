@@ -3,6 +3,8 @@ import { Form, Button, Modal, Navbar, Col, Dropdown } from "react-bootstrap";
 import { connect } from "react-redux";
 import * as action from "../redux/actioncCeator";
 import DatePicker from "react-datepicker";
+import AsyncSelect from "react-select/async";
+import Main from "./Main";
 function UserInput(props) {
   const [nameVal, setNameVal] = useState("");
   const [addressVal, setAddressVal] = useState("");
@@ -10,56 +12,91 @@ function UserInput(props) {
   const [date, setDate] = useState(null);
   const [gender, setGender] = useState("select the gender");
   const [hobbies, setHobbies] = useState([]);
-  const [error, setError] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [items, setItems] = useState([]);
-  const [col, setCollege] = useState("");
+
+  const [college, setCollege] = useState("");
+  const [selectedOption, setSelectedOption] = useState({
+    label: "Select College",
+    value: "Select College ",
+  });
+
   // Note: the empty deps array [] means
   // this useEffect will run once
   // similar to componentDidMount()
-  useEffect(() => {
-    fetch("http://universities.hipolabs.com/search?name=Biju")
-      .then((res) => res.json())
-      .then(
-        (result) => {
-          setIsLoaded(true);
-          setItems(result);
-        },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        (error) => {
-          setIsLoaded(true);
-          setError(error);
-        }
-      );
-  }, []);
+  const fetchData = (inputValue, callback) => {
+    setTimeout(() => {
+      fetch("http://universities.hipolabs.com/search?name=" + inputValue, {
+        method: "GET",
+      })
+        .then((resp) => {
+          return resp.json();
+        })
+        .then((data) => {
+          const tempArray = [];
+          if (data) {
+            if (data.length) {
+              data.forEach((element) => {
+                tempArray.push({
+                  label: `${element.name}`,
+                  value: element.name,
+                });
+              });
+            } else {
+              tempArray.push({
+                label: `${data.name}`,
+                value: data.name,
+              });
+            }
+          }
+
+          callback(tempArray);
+        })
+        .catch((error) => {
+          console.log(error, "catch the hoop");
+        });
+    }, 1000);
+  };
   const openModal = () => {
     setShow(true);
   };
 
   const clickingsubmit = (e) => {
-    props.addUser(nameVal, addressVal, date, gender);
+    const data = {
+      id: new Date(),
+      nameVal,
+      addressVal,
+      date,
+      gender,
+      college,
+      editing: false,
+    };
+    props.addUser(data);
     setShow(false);
     setAddressVal("");
     setNameVal("");
-
     setDate(null);
+    setSelectedOption({ label: "Select College", value: "Select College " });
+  };
+
+  const handleSelectChange = (selectedOption) => {
+    if (selectedOption) {
+      setSelectedOption(selectedOption);
+      setCollege(selectedOption.value);
+    }
   };
   const hobbiesChecked = (event) => {
     const target = event.target;
-    var value = target.value;
+    var values = target.value;
+
     var hob = [];
     var a = 0;
     if (target.checked) {
-      hob[value] = value;
+      hob.push(...hobbies, values);
       setHobbies(hob);
-      a = a + 1;
     } else {
       console.log(a);
     }
-    console.log(hob);
   };
+  let val = props.post;
   console.log(hobbies);
   return (
     <div>
@@ -107,19 +144,18 @@ function UserInput(props) {
                   onChange={(date) => setDate(date)}
                   isClearable
                   showYearDropdown
+                  scrollableMonthYearDropdown
                 />
               </Form.Group>
               <Form.Group as={Col} controlId="exampleForm.ControlSelect2">
-                <Form.Label>School</Form.Label>
-                <Form.Control
-                  as="select"
-                  custom
-                  onChange={(e) => setCollege(e.target.value)}
-                >
-                  <option value="Female">Female</option>
-                  <option value="Male">Male</option>
-                  <option value="Others">Others</option>
-                </Form.Control>
+                <Form.Label>College</Form.Label>
+                <AsyncSelect
+                  value={selectedOption}
+                  loadOptions={fetchData}
+                  onChange={handleSelectChange}
+                  isSearchable={true}
+                  defaultOptions={true}
+                />
               </Form.Group>
 
               <Form.Group as={Col} controlId="exampleForm.ControlSelect2">
@@ -141,7 +177,7 @@ function UserInput(props) {
               <Form.Check
                 custom
                 inline
-                value="3"
+                value="Reading"
                 label="Reading"
                 type="checkbox"
                 id={`custom-inline-checkbox-1`}
@@ -150,7 +186,7 @@ function UserInput(props) {
               <Form.Check
                 custom
                 inline
-                value="0"
+                value="Gaming"
                 label="Gaming"
                 type="checkbox"
                 id={`custom-inline-checkbox-2`}
@@ -159,7 +195,7 @@ function UserInput(props) {
               <Form.Check
                 custom
                 inline
-                value="1"
+                value="Traveling"
                 label="Traveling"
                 type="checkbox"
                 id={`custom-inline-checkbox-3`}
@@ -168,7 +204,7 @@ function UserInput(props) {
               <Form.Check
                 custom
                 inline
-                value="2"
+                value="Drawing"
                 label="Drawing"
                 type="checkbox"
                 id={`custom-inline-checkbox-4`}
@@ -192,23 +228,19 @@ function UserInput(props) {
           </Button>
         </Modal.Footer>
       </Modal>
-      {console.log(items)}
-      {console.log(props)}
+      {console.log(props.post)}
+      <Main />
     </div>
   );
 }
 const mapStateToProps = (state) => {
   return {
-    name: state.name,
-    address: state.address,
-    date: state.date,
-    gender: state.gender,
+    post: state,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    addUser: (nameVal, addressVal, date, gender) =>
-      dispatch(action.addUser(nameVal, addressVal, date, gender)),
+    addUser: (data) => dispatch(action.addUser(data)),
   };
 };
 
