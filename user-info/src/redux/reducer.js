@@ -7,8 +7,18 @@ const reducer = (state = [], action) => {
   switch (action.type) {
     case actions.ADD_USER:
       return state.concat(action.data);
+
     case actions.DELETE_USER:
       return state.filter((val) => val.id != action.id);
+
+    case actions.UPDATE_USER: {
+      return {
+        ...state,
+        state: state.map((contact) =>
+          contact.id == action.id ? action.data : contact
+        ),
+      };
+    }
     default:
       return state;
   }

@@ -11,3 +11,10 @@ export const deleteUser = (id) => {
     id,
   };
 };
+export const updateUser = (id, data) => {
+  return {
+    type: actions.UPDATE_USER,
+    id,
+    data,
+  };
+};
