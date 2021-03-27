@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Form, Button, Modal, Navbar, Col, Dropdown } from "react-bootstrap";
+import React, { useState } from "react";
+import { Form, Button, Modal, Navbar, Col } from "react-bootstrap";
 import { connect } from "react-redux";
 import * as action from "../redux/actioncCeator";
 import DatePicker from "react-datepicker";
 import AsyncSelect from "react-select/async";
 import Main from "./Main";
 function UserInput(props) {
+  console.log(props);
   const [nameVal, setNameVal] = useState("");
   const [addressVal, setAddressVal] = useState("");
   const [show, setShow] = useState(false);
   const [date, setDate] = useState(null);
-  const [gender, setGender] = useState("select the gender");
+  const [gender, setGender] = useState("");
   const [hobbies, setHobbies] = useState([]);
 
   const [college, setCollege] = useState("");
@@ -75,6 +76,7 @@ function UserInput(props) {
     setNameVal("");
     setDate(null);
     setSelectedOption({ label: "Select College", value: "Select College " });
+    setCollege("");
   };
 
   const handleSelectChange = (selectedOption) => {
@@ -96,12 +98,12 @@ function UserInput(props) {
       console.log(a);
     }
   };
-  let val = props.post;
+
   console.log(hobbies);
   return (
     <div>
       <Navbar bg="dark" variant="dark">
-        <Navbar.Brand href="#home">MindBrowser</Navbar.Brand>
+        <Navbar.Brand href="#home">MindBowser</Navbar.Brand>
 
         <Button variant="outline-primary" onClick={openModal}>
           AddItem

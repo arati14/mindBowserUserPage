@@ -1,15 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
 import { Table, Button } from "react-bootstrap";
 import { connect } from "react-redux";
+import { deleteUser } from "../redux/actioncCeator";
 
 function Main(props) {
-  let reversed = props.post.reverse();
-  console.log(reversed);
+  console.log(props.post);
+
+  let reversed = [...props.post].reverse();
+
+  const deleteOnClickUser = (event) => {
+    props.deleteUser(event.target.value);
+  };
+
   return (
     <div>
       <Table striped bordered hover variant="dark">
-        {console.log(props)}
-
         <thead>
           <tr>
             <th>Sl No.</th>
@@ -18,11 +23,12 @@ function Main(props) {
             <th>College</th>
             <th>Dob</th>
             <th>Hobbies</th>
+
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {props.post.map((val, index) => (
+          {reversed.map((val, index) => (
             <tr>
               <td>{index}</td>
               <td>{val.nameVal}</td>
@@ -32,8 +38,16 @@ function Main(props) {
               <td>hhh</td>
               <td>
                 {" "}
-                <Button variant="danger">Delete</Button>{" "}
-                <Button variant="info">Edit</Button>
+                <Button
+                  variant="danger"
+                  value={val.id}
+                  onClick={deleteOnClickUser}
+                >
+                  Delete
+                </Button>{" "}
+                <Button variant="info" value={val.id}>
+                  Edit
+                </Button>
               </td>
             </tr>
           ))}
@@ -47,5 +61,10 @@ const mapStateToProps = (state) => {
     post: state,
   };
 };
+const mapDispatchToProps = (dispatch) => {
+  return {
+    deleteUser: (id) => dispatch(deleteUser(id)),
+  };
+};
 
-export default connect(mapStateToProps)(Main);
+export default connect(mapStateToProps, mapDispatchToProps)(Main);
