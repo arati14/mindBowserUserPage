@@ -1,1 +1,1 @@
-# mindBrowserUserPage
+# mindBowserUserPage
