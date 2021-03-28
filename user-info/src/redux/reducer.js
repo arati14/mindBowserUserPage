@@ -12,12 +12,7 @@ const reducer = (state = [], action) => {
       return state.filter((val) => val.id != action.id);
 
     case actions.UPDATE_USER: {
-      return {
-        ...state,
-        state: state.map((contact) =>
-          contact.id == action.id ? action.data : contact
-        ),
-      };
+      return state.map((item) => (item.id == action.id ? action.data : item));
     }
     default:
       return state;

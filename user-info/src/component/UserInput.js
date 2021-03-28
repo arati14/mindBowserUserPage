@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Form, Button, Modal, Navbar, Col } from "react-bootstrap";
 import { connect } from "react-redux";
 import * as action from "../redux/actioncCeator";
-import DatePicker from "react-datepicker";
+
 import AsyncSelect from "react-select/async";
 import Main from "./Main";
+function validateText(str) {
+  return /[^A-Za-z]/.test(str);
+}
 function UserInput(props) {
-  console.log(props);
   const [nameVal, setNameVal] = useState("");
   const [addressVal, setAddressVal] = useState("");
   const [show, setShow] = useState(false);
@@ -19,11 +21,11 @@ function UserInput(props) {
     label: "Select College",
     value: "Select College ",
   });
-  const [showTable, setShowTable] = useState("false");
+  const [showTable, setShowTable] = useState(false);
   const [error, setError] = useState([]);
-  // Note: the empty deps array [] means
-  // this useEffect will run once
-  // similar to componentDidMount()
+
+  //to fetch the api data to show the data in asyn select
+
   const fetchData = (inputValue, callback) => {
     setTimeout(() => {
       fetch("http://universities.hipolabs.com/search?name=" + inputValue, {
@@ -57,12 +59,18 @@ function UserInput(props) {
         });
     }, 1000);
   };
+
+  //to open the modal
+
   const openModal = () => {
     setShow(true);
   };
   const hasError = (key) => {
     return error.indexOf(key) !== -1;
   };
+
+  //on click submit
+
   const clickingsubmit = (e) => {
     var errors = [];
 
@@ -76,26 +84,35 @@ function UserInput(props) {
     if (date === null) {
       errors.push("date");
     }
-    // if(college===""){
-    //   errors.push("college");
-    // }
+
     setError(errors);
     if (errors.length > 0) {
       return false;
     } else {
       setShow(false);
     }
-    const data = {
-      id: new Date(),
-      nameVal,
-      addressVal,
-      date,
-      gender,
-      college,
-      hobbies: hobbies.concat([extraHobby]),
-    };
-    props.addUser(data);
 
+    //validation for text field
+    if (
+      validateText(nameVal) ||
+      validateText(addressVal) ||
+      validateText(extraHobby)
+    ) {
+      alert("Enter only alphabets");
+    } else {
+      // temp object is created to assign the data to the state
+      const data = {
+        id: new Date(),
+        nameVal,
+        addressVal,
+        date,
+        gender,
+        college,
+        hobbies: hobbies.concat([extraHobby]),
+      };
+      props.addUser(data);
+    }
+    //re-intializing the form
     setAddressVal("");
     setNameVal("");
     setDate(null);
@@ -106,12 +123,16 @@ function UserInput(props) {
     setShowTable(true);
   };
 
+  //handle college select option
+
   const handleSelectChange = (selectedOption) => {
     if (selectedOption) {
       setSelectedOption(selectedOption);
       setCollege(selectedOption.value);
     }
   };
+  //to check the hobby as well as add additional hobbies
+
   const hobbiesChecked = (event) => {
     const target = event.target;
     let values = target.value;
@@ -127,25 +148,28 @@ function UserInput(props) {
       setHobbies([...hobbies]);
     }
   };
+  //to handle extra hobby
   const extraHobbyHandler = (event) => {
     const target = event.target;
     let value = target.value;
     setExtraHobby(value);
   };
-  const selectStyles = { menu: (styles) => ({ ...styles, zIndex: 999 }) };
-  console.log(hobbies);
+
   return (
     <div>
-      <Navbar bg="dark" variant="dark" className="mr-sm-2">
+      <Navbar
+        bg="dark"
+        variant="dark"
+        className="mr-sm-2"
+        style={{ justifyContent: "flex-start" }}
+      >
         <Navbar.Brand href="#home">MindBowser</Navbar.Brand>
-
-        <Button
-          variant="outline-primary"
-          style={{ alignItems: "flex-end" }}
-          onClick={openModal}
-        >
-          AddItem
-        </Button>
+        <div style={{ marginLeft: "1200px" }}>
+          {" "}
+          <Button variant="primary" onClick={openModal}>
+            Add User
+          </Button>
+        </div>
       </Navbar>
       <Modal
         show={show}
@@ -173,16 +197,13 @@ function UserInput(props) {
                   hasError("name") ? "form-control is-invalid" : "form-control"
                 }
               />
-              {/* <div className={hasError("name") ? "inline-errormsg" : "hidden"}>
-                Please enter a name
-              </div> */}
             </Form.Group>
 
             <Form.Group controlId="formBasicAddress">
               <Form.Label>Address</Form.Label>
               <Form.Control
                 as="textarea"
-                placeholder="enter address"
+                placeholder="Enter Address"
                 value={addressVal}
                 onChange={(e) => setAddressVal(e.target.value)}
                 className={
@@ -195,13 +216,7 @@ function UserInput(props) {
             <Form.Row>
               <Form.Group as={Col} controlId="formDate">
                 <Form.Label>Date of Birth</Form.Label>
-                {/* <DatePicker
-                  selected={date}
-                  onChange={(date) => setDate(date)}
-                  isClearable
-                  showYearDropdown
-                  scrollableMonthYearDropdown
-                /> */}
+
                 <input
                   type="date"
                   name="dob"
@@ -222,7 +237,6 @@ function UserInput(props) {
                   onChange={handleSelectChange}
                   isSearchable={true}
                   defaultOptions={true}
-                  // Fixes the overlapping problem of the component
                   styles={{
                     // Fixes the overlapping problem of the component
                     menu: (provided) => ({ ...provided, zIndex: 9999 }),
@@ -238,7 +252,7 @@ function UserInput(props) {
                   custom
                   onChange={(e) => setGender(e.target.value)}
                 >
-                  <option>select</option>
+                  <option>Select</option>
                   <option value="Female">Female</option>
                   <option value="Male">Male</option>
                   <option value="Others">Others</option>
@@ -291,7 +305,7 @@ function UserInput(props) {
                 as="textarea"
                 className="mb-2 mr-sm-2"
                 id="inlineFormInputName2"
-                placeholder="extra hobbies"
+                placeholder="Extra Hobbies"
                 onChange={extraHobbyHandler}
               />
             </Form>
@@ -303,8 +317,8 @@ function UserInput(props) {
           </Button>
         </Modal.Footer>
       </Modal>
-      {console.log(props.post)}
-      <Main showTable />
+      {console.log(showTable)}
+      {showTable ? <Main /> : ""}
     </div>
   );
 }

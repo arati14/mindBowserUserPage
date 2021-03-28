@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, Form, Col } from "react-bootstrap";
 import { connect } from "react-redux";
 import * as action from "../redux/actioncCeator";
-import DatePicker from "react-datepicker";
+
 import AsyncSelect from "react-select/async";
+function validateText(str) {
+  return /[^A-Za-z]/.test(str);
+}
 function Main(props, no) {
-  console.log(props);
-  console.log(no);
   const [id, setId] = useState("");
   const [show, setShow] = useState(false);
   const [nameVal, setNameVal] = useState("");
@@ -21,23 +22,33 @@ function Main(props, no) {
     label: "Select College",
     value: "Select College ",
   });
-
+  //to fetch the data of the user for whom we want to update
   useEffect(() => {
     if (id !== "") {
       const dummyUser = props.post.find((val) => val.id == id);
-      console.log(dummyUser);
-      console.log(dummyUser.date);
+
       setNameVal(dummyUser.nameVal);
       setAddressVal(dummyUser.addressVal);
+      setDate(dummyUser.date);
+      setGender(dummyUser.gender);
       setSelectedOption({
         label: dummyUser.college,
         value: dummyUser.college,
       });
-      setHobbies({ value: dummyUser.hobbies });
+      setHobbies([...dummyUser.hobbies]);
+      setExtraHobby(
+        [...dummyUser.hobbies].find(
+          (item) =>
+            item !== "Reading" &&
+            item !== "Drawing" &&
+            item !== "Travelling" &&
+            item !== "Gaming"
+        )
+      );
       setCollege(dummyUser.college);
     }
   }, [id]);
-
+  //to fetch the api data to show the data in asyn select
   const fetchData = (inputValue, callback) => {
     setTimeout(() => {
       fetch("http://universities.hipolabs.com/search?name=" + inputValue, {
@@ -71,6 +82,7 @@ function Main(props, no) {
         });
     });
   };
+  //to display the data in descending order  of most recent
   let reversed = [...props.post].reverse();
   const handleSelectChange = (selectedOption) => {
     if (selectedOption) {
@@ -88,26 +100,28 @@ function Main(props, no) {
   };
   const clickingsubmit = (e) => {
     setShow(false);
-    // const dataq = Object.assign(props.data, {
-    //   nameVal: nameVal,
-    //   addressVal: addressVal,
-    //   date: date,
-    //   gender: gender,
-    //   college: college,
-    //   hobbies: hobbies,
-    // });
-    const data = {
-      nameVal,
-      addressVal,
-      date,
-      gender,
-      college,
-      hobbies: hobbies,
-    };
-    console.log(data);
-    // console.log(dataq);
-    props.updateUser(id, data);
+    //to validate the text
+    if (
+      validateText(nameVal) ||
+      validateText(addressVal) ||
+      validateText(extraHobby)
+    ) {
+      alert("Enter only alphabets");
+    } else {
+      const data = {
+        id: id,
+        nameVal,
+        addressVal,
+        date,
+        gender,
+        college,
+        hobbies: hobbies,
+      };
+
+      props.updateUser(id, data);
+    }
   };
+  //to select hobby
   const hobbiesChecked = (event) => {
     const target = event.target;
     let values = target.value;
@@ -131,13 +145,18 @@ function Main(props, no) {
 
   return (
     <div>
-      <h3>USER INFO</h3>
+      <div style={{ textAlign: "center" }}>
+        {" "}
+        <h3>User Details</h3>
+      </div>
+
       <Table striped bordered hover variant="dark">
         <thead>
           <tr>
             <th>Sl No.</th>
             <th>Name</th>
             <th>Gender</th>
+            <th>Address</th>
             <th>College</th>
             <th>Dob</th>
             <th>Hobbies</th>
@@ -150,9 +169,10 @@ function Main(props, no) {
               <td>{index}</td>
               <td>{val.nameVal}</td>
               <td>{val.gender}</td>
+              <td>{val.addressVal}</td>
               <td>{val.college}</td>
               <td>{val.date}</td>
-              <td>{val.hobbies}</td>
+              <td>{val.hobbies.join(",")}</td>
               <td>
                 {" "}
                 <Button
@@ -191,7 +211,6 @@ function Main(props, no) {
                 as="textarea"
                 placeholder="Enter Name"
                 value={nameVal}
-                pattern="[A-Za-z]{3}"
                 onChange={(e) => setNameVal(e.target.value)}
               />
             </Form.Group>
@@ -208,12 +227,11 @@ function Main(props, no) {
             <Form.Row>
               <Form.Group as={Col} controlId="formDate">
                 <Form.Label>Date of Birth</Form.Label>
-                <DatePicker
-                  selected={date}
-                  onChange={(date) => setDate(date)}
-                  isClearable
-                  showYearDropdown
-                  scrollableMonthYearDropdown
+                <input
+                  type="date"
+                  name="dob"
+                  value={date ? date : ""}
+                  onChange={(event) => setDate(event.target.value)}
                 />
               </Form.Group>
               <Form.Group as={Col} controlId="exampleForm.ControlSelect2">
@@ -224,6 +242,10 @@ function Main(props, no) {
                   onChange={handleSelectChange}
                   isSearchable={true}
                   defaultOptions={true}
+                  styles={{
+                    // Fixes the overlapping problem of the component
+                    menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                  }}
                 />
               </Form.Group>
 
@@ -249,6 +271,7 @@ function Main(props, no) {
                 inline
                 value="Reading"
                 label="Reading"
+                checked={hobbies.find((item) => item === "Reading")}
                 type="checkbox"
                 id={`custom-inline-checkbox-1`}
                 onChange={hobbiesChecked}
@@ -259,6 +282,15 @@ function Main(props, no) {
                 value="Gaming"
                 label="Gaming"
                 type="checkbox"
+                id={`custom-inline-checkbox-1`}
+                onChange={hobbiesChecked}
+              />
+              <Form.Check
+                custom
+                inline
+                value="Gaming"
+                checked={hobbies.find((item) => item === "Gaming")}
+                type="checkbox"
                 id={`custom-inline-checkbox-2`}
                 onChange={hobbiesChecked}
               />
@@ -267,6 +299,7 @@ function Main(props, no) {
                 inline
                 value="Traveling"
                 label="Traveling"
+                checked={hobbies.find((item) => item === "Travelling")}
                 type="checkbox"
                 id={`custom-inline-checkbox-3`}
                 onChange={hobbiesChecked}
@@ -276,6 +309,7 @@ function Main(props, no) {
                 inline
                 value="Drawing"
                 label="Drawing"
+                checked={hobbies.find((item) => item === "Drawing")}
                 type="checkbox"
                 id={`custom-inline-checkbox-4`}
                 onChange={hobbiesChecked}
@@ -289,6 +323,7 @@ function Main(props, no) {
                 id="inlineFormInputName2"
                 placeholder="extra hobbies"
                 onChange={extraHobbyHandler}
+                value={extraHobby}
               />
             </Form>
           </Form>
